@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Commentary {
+  commentaryid  Int            @id @default(autoincrement())
+  content       String         @db.VarChar
+  createdat     DateTime?      @default(now()) @db.Timestamp(6)
+  userid        Int?
+  publicationid Int?
+  Notification  Notification[]
+
+  @@map("commentary")
+}
+
+model Notification {
+  notificationid Int         @id @default(autoincrement())
+  type           String      @db.VarChar
+  createdat      DateTime?   @default(now()) @db.Timestamp(6)
+  userid         Int?
+  senderid       Int?
+  publicationid  Int?
+  commentaryid   Int?
+  Commentary     Commentary? @relation(fields: [commentaryid], references: [commentaryid], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("notification")
+}
+
+model Publication {
+  publicationid Int       @id @default(autoincrement())
+  content       String    @db.VarChar
+  imageurl      String?   @db.VarChar
+  likes         Int?      @default(0)
+  createdat     DateTime? @default(now()) @db.Timestamp(6)
+  userid        Int?
+  Like          Like[]
+
+  @@map("publication")
+}
+
+model User {
+  userid      Int     @id @default(autoincrement())
+  email       String  @unique @db.VarChar
+  firstname   String  @db.VarChar
+  lastname    String  @db.VarChar
+  username    String  @unique @db.VarChar
+  password    String  @db.VarChar
+  description String  @db.VarChar
+  color       String  @db.VarChar
+  imageurl    String? @db.VarChar
+  followers   Int?    @default(0)
+  following   Int?    @default(0)
+  posts       Int?    @default(0)
+  Like        Like[]
+
+  @@map("user")
+}
+
+model Like {
+  likeid        Int         @id @default(autoincrement())
+  createdat     DateTime?   @default(now()) @db.Timestamp(6)
+  userid        Int
+  publicationid Int
+  user          User        @relation(fields: [userid], references: [userid], onDelete: Cascade)
+  publication   Publication @relation(fields: [publicationid], references: [publicationid], onDelete: Cascade)
+
+  @@unique([userid, publicationid], name: "unique_user_publication_like")
+  @@map("like")
+}
