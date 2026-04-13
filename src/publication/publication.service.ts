@@ -172,7 +172,7 @@ export class PublicationService {
       return await this.prisma.like.delete({
         where: {
           // Restriccion dada en la BD //
-          unique_user_publication_like: {
+          userid_publicationid: {
             userid,
             publicationid
           }

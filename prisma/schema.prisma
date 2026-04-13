@@ -17,6 +17,18 @@ model Commentary {
   @@map("commentary")
 }
 
+model Like {
+  likeid        Int         @id @default(autoincrement())
+  createdat     DateTime?   @default(now()) @db.Timestamp(6)
+  userid        Int
+  publicationid Int
+  Publication   Publication @relation(fields: [publicationid], references: [publicationid], onDelete: Cascade)
+  User          User        @relation(fields: [userid], references: [userid], onDelete: Cascade)
+
+  @@unique([userid, publicationid])
+  @@map("like")
+}
+
 model Notification {
   notificationid Int         @id @default(autoincrement())
   type           String      @db.VarChar
@@ -58,16 +70,4 @@ model User {
   Like        Like[]
 
   @@map("user")
-}
-
-model Like {
-  likeid        Int         @id @default(autoincrement())
-  createdat     DateTime?   @default(now()) @db.Timestamp(6)
-  userid        Int
-  publicationid Int
-  user          User        @relation(fields: [userid], references: [userid], onDelete: Cascade)
-  publication   Publication @relation(fields: [publicationid], references: [publicationid], onDelete: Cascade)
-
-  @@unique([userid, publicationid], name: "unique_user_publication_like")
-  @@map("like")
 }
