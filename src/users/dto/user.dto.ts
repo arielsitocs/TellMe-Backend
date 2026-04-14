@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, IsNumber, IsUrl, IsOptional } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, IsUrl, IsOptional } from "class-validator";
 
 export class UserDto {
     @IsEmail()
@@ -30,6 +30,6 @@ export class UserDto {
     color!: string
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     password!: string
 }

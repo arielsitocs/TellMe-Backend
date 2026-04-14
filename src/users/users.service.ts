@@ -1,8 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { UpdatePasswordDto } from './dto/password.dto';
 
 @Injectable()
 export class UsersService {
@@ -74,14 +74,15 @@ export class UsersService {
     }
   }
 
-  async update(id: number, userData: UpdateUserDto, userId: number) {
+  async update(id: number, userData: UserDto, userId: number) {
     try {
       const foundUser = await this.prisma.user.findFirst({
         where: {
           userid: id
         },
         select: {
-          userid: true
+          userid: true,
+          password: true
         }
       })
 
@@ -98,6 +99,7 @@ export class UsersService {
         where: {
           userid: id
         },
+
         data: {
           email: userData.email,
           firstname: userData.firstname,
@@ -106,6 +108,58 @@ export class UsersService {
           description: userData.description,
           imageurl: userData.imageurl,
           color: userData.color,
+        },
+      });
+
+
+      const { password, ...userWithoutPassword } = userUpdate;
+      return userWithoutPassword;
+    } catch (error: any) {
+      if (error?.code === 'P2025') {
+        throw new NotFoundException(`Usuario con ID ${id} no encontrado.`);
+      }
+
+      throw error;
+    }
+  }
+
+  async updatePassword(id: number, passwordData: UpdatePasswordDto, userId: number) {
+    try {
+      const foundUser = await this.prisma.user.findFirst({
+        where: {
+          userid: id
+        },
+        select: {
+          userid: true,
+          password: true
+        }
+      })
+
+      if (!foundUser) {
+        throw new NotFoundException(`Usuario con ID ${id} no encontrado.`)
+      }
+
+      if (foundUser?.userid !== userId) {
+        throw new ForbiddenException(`No tienes permiso para editar este usuario.`);
+      }
+
+      // Compara con haseho la contraseña actual ingresada en el frontend con la del usuario //
+      const isMatch = await bcrypt.compare(passwordData.currentpassword, foundUser.password);
+
+      if (!isMatch) {
+        throw new UnauthorizedException('La contraseña actual no es correcta');
+      }
+
+      const hashedPassword = await bcrypt.hash(passwordData.password, 10)
+
+      // Si pasa todas las validaciones, realiza el update sin password //
+      const userUpdate = await this.prisma.user.update({
+        where: {
+          userid: id
+        },
+
+        data: {
+          password: hashedPassword
         },
       });
 
