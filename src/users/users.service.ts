@@ -106,6 +106,9 @@ export class UsersService {
           lastname: userData.lastname,
           username: userData.username,
           description: userData.description,
+          posts: userData.posts,
+          followers: userData.followers,
+          following: userData.following,
           imageurl: userData.imageurl,
           color: userData.color,
         },
@@ -162,7 +165,6 @@ export class UsersService {
           password: hashedPassword
         },
       });
-
 
       const { password, ...userWithoutPassword } = userUpdate;
       return userWithoutPassword;

@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, IsUrl, IsOptional } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, IsUrl, IsOptional, IsNumber } from "class-validator";
 
 export class UserDto {
     @IsEmail()
@@ -28,6 +28,18 @@ export class UserDto {
     @IsOptional()
     @IsString()
     color!: string
+
+    @IsOptional()
+    @IsNumber()
+    posts!: number
+
+    @IsOptional()
+    @IsNumber()
+    following!: number
+
+    @IsOptional()
+    @IsNumber()
+    followers!: number
 
     @IsString()
     @IsOptional()
