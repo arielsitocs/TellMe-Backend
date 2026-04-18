@@ -12,62 +12,85 @@ model Commentary {
   createdat     DateTime?      @default(now()) @db.Timestamp(6)
   userid        Int?
   publicationid Int?
+  publication   Publication?   @relation(fields: [publicationid], references: [publicationid], onDelete: Cascade, onUpdate: NoAction)
+  user          User?          @relation(fields: [userid], references: [userid], onDelete: Cascade, onUpdate: NoAction)
   Notification  Notification[]
 
   @@map("commentary")
 }
 
 model Like {
-  likeid        Int         @id @default(autoincrement())
   createdat     DateTime?   @default(now()) @db.Timestamp(6)
   userid        Int
   publicationid Int
-  Publication   Publication @relation(fields: [publicationid], references: [publicationid], onDelete: Cascade)
-  User          User        @relation(fields: [userid], references: [userid], onDelete: Cascade)
+  Publication   Publication @relation(fields: [publicationid], references: [publicationid], onDelete: Cascade, onUpdate: NoAction)
+  User          User        @relation(fields: [userid], references: [userid], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([userid, publicationid])
+  @@id([userid, publicationid])
   @@map("like")
 }
 
 model Notification {
-  notificationid Int         @id @default(autoincrement())
-  type           String      @db.VarChar
-  createdat      DateTime?   @default(now()) @db.Timestamp(6)
-  userid         Int?
-  senderid       Int?
-  publicationid  Int?
-  commentaryid   Int?
-  Commentary     Commentary? @relation(fields: [commentaryid], references: [commentaryid], onDelete: Cascade, onUpdate: NoAction)
+  notificationid                   Int          @id @default(autoincrement())
+  type                             String       @db.VarChar
+  createdat                        DateTime?    @default(now()) @db.Timestamp(6)
+  userid                           Int?
+  senderid                         Int?
+  publicationid                    Int?
+  commentaryid                     Int?
+  Commentary                       Commentary?  @relation(fields: [commentaryid], references: [commentaryid], onDelete: Cascade, onUpdate: NoAction)
+  publication                      Publication? @relation(fields: [publicationid], references: [publicationid], onDelete: Cascade, onUpdate: NoAction)
+  user_notification_senderidTouser User?        @relation("notification_senderidTouser", fields: [senderid], references: [userid], onDelete: Cascade, onUpdate: NoAction)
+  user_notification_useridTouser   User?        @relation("notification_useridTouser", fields: [userid], references: [userid], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("notification")
 }
 
 model Publication {
-  publicationid Int       @id @default(autoincrement())
-  content       String    @db.VarChar
-  imageurl      String?   @db.VarChar
-  likes         Int?      @default(0)
-  createdat     DateTime? @default(now()) @db.Timestamp(6)
+  publicationid Int            @id @default(autoincrement())
+  content       String         @db.VarChar
+  imageurl      String?        @db.VarChar
+  likes         Int?           @default(0)
+  createdat     DateTime?      @default(now()) @db.Timestamp(6)
   userid        Int?
+  commentary    Commentary[]
   Like          Like[]
+  notification  Notification[]
+  user          User?          @relation(fields: [userid], references: [userid], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("publication")
 }
 
 model User {
-  userid      Int     @id @default(autoincrement())
-  email       String  @unique @db.VarChar
-  firstname   String  @db.VarChar
-  lastname    String  @db.VarChar
-  username    String  @unique @db.VarChar
-  password    String  @db.VarChar
-  description String  @db.VarChar
-  color       String  @db.VarChar
-  imageurl    String? @db.VarChar
-  followers   Int?    @default(0)
-  following   Int?    @default(0)
-  posts       Int?    @default(0)
-  Like        Like[]
+  userid                                   Int            @id @default(autoincrement())
+  email                                    String         @unique @db.VarChar
+  firstname                                String         @db.VarChar
+  lastname                                 String         @db.VarChar
+  username                                 String         @unique @db.VarChar
+  password                                 String         @db.VarChar
+  description                              String         @db.VarChar
+  color                                    String         @db.VarChar
+  imageurl                                 String?        @db.VarChar
+  followers                                Int?           @default(0)
+  following                                Int?           @default(0)
+  posts                                    Int?           @default(0)
+  commentary                               Commentary[]
+  follow_follow_followedidTouser           follow[]       @relation("follow_followedidTouser")
+  follow_follow_followeridTouser           follow[]       @relation("follow_followeridTouser")
+  Like                                     Like[]
+  notification_notification_senderidTouser Notification[] @relation("notification_senderidTouser")
+  notification_notification_useridTouser   Notification[] @relation("notification_useridTouser")
+  publication                              Publication[]
 
   @@map("user")
+}
+
+model follow {
+  followerid                   Int
+  followedid                   Int
+  createdat                    DateTime? @default(now()) @db.Timestamp(6)
+  user_follow_followedidTouser User      @relation("follow_followedidTouser", fields: [followedid], references: [userid], onDelete: Cascade, onUpdate: NoAction)
+  user_follow_followeridTouser User      @relation("follow_followeridTouser", fields: [followerid], references: [userid], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([followerid, followedid])
 }

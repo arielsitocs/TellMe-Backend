@@ -3,6 +3,7 @@ import { UserDto } from './dto/user.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UpdatePasswordDto } from './dto/password.dto';
+import { FollowDto } from './dto/follow.dto';
 
 @Injectable()
 export class UsersService {
@@ -209,4 +210,76 @@ export class UsersService {
       throw error;
     }
   }
+
+  // SECCION DE SEGUIMIENTOS //
+
+    async findFollows() {
+      return await this.prisma.follow.findMany();
+    }
+
+  async follow(followData: FollowDto, userId: number) {
+    try {
+      const foundUser = await this.prisma.user.findFirst({
+        where: {
+          userid: userId
+        },
+        select: {
+          userid: true
+        }
+      })
+
+      if (!foundUser) {
+        throw new NotFoundException(`Usuario con ID ${followData.followedid} no encontrado.`)
+      }
+
+      if (foundUser.userid !== userId) {
+        throw new ForbiddenException('No tienes permiso para seguir a este usuario.')
+      }
+
+      return await this.prisma.follow.create({
+        data: {
+          followerid: userId,
+          followedid: followData.followedid
+        }
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async unfollow(followedid: number, userId: number) {
+    try {
+      const foundUser = await this.prisma.user.findFirst({
+        where: {
+          userid: userId
+        },
+        select: {
+          userid: true
+        }
+      })
+
+      if (!foundUser) {
+        throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`)
+      }
+
+      if (foundUser.userid !== userId) {
+        throw new ForbiddenException('No tienes permiso para seguir a este usuario.')
+      }
+
+      return await this.prisma.follow.delete({
+        where: {
+          followerid_followedid: {
+            followerid: userId,
+            followedid: followedid
+          }
+        }
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 }
+
+
+
+

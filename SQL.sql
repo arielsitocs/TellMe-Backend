@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS "like" CASCADE;
 DROP TABLE IF EXISTS "commentary" CASCADE;
 DROP TABLE IF EXISTS "publication" CASCADE;
 DROP TABLE IF EXISTS "user" CASCADE;
+DROP TABLE IF EXISTS "follower" CASCADE;
 
 CREATE TABLE "user" (
 	userid SERIAL NOT NULL PRIMARY KEY,
@@ -37,11 +38,12 @@ CREATE TABLE "commentary" (
 );
 
 CREATE TABLE "like" (
-	likeid SERIAL NOT NULL PRIMARY KEY,
-	createdat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	userid INT REFERENCES "user"(userid) ON DELETE CASCADE,
-	publicationid INT REFERENCES "publication"(publicationid) ON DELETE CASCADE,
-	CONSTRAINT unique_user_publication_like UNIQUE (userid, publicationid)
+    createdat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    userid INT REFERENCES "user"(userid) ON DELETE CASCADE,
+    publicationid INT REFERENCES "publication"(publicationid) ON DELETE CASCADE,
+    
+    -- CLAVE PRIMARIA COMPUESTA PARA EVITAR SEGUIDORES DUPLICADOS --
+    PRIMARY KEY (userid, publicationid)
 );
 
 CREATE TABLE "notification" (
@@ -52,6 +54,15 @@ CREATE TABLE "notification" (
 	senderid INT REFERENCES "user"(userid) ON DELETE CASCADE,
 	publicationid INT REFERENCES "publication"(publicationid) ON DELETE CASCADE,
 	commentaryid INT REFERENCES "commentary"(commentaryid) ON DELETE CASCADE
+);
+
+CREATE TABLE "follow" (
+    followerid INT NOT NULL REFERENCES "user"(userid) ON DELETE CASCADE,
+    followedid INT NOT NULL REFERENCES "user"(userid) ON DELETE CASCADE,
+    createdat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+	-- CLAVE PRIMARIA COMPUESTA PARA EVITAR SEGUIDORES DUPLICADOS --
+    PRIMARY KEY (followerid, followedid) 
 );
 
 INSERT INTO "user" (firstname, lastname, username, password, description, color, followers, following, posts)

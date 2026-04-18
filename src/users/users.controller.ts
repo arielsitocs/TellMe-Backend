@@ -4,6 +4,7 @@ import { UserDto } from './dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { UpdatePasswordDto } from './dto/password.dto';
+import { FollowDto } from './dto/follow.dto';
 
 @Controller('/users')
 export class UsersController {
@@ -17,6 +18,11 @@ export class UsersController {
   @Get()
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('/follow')
+  getFollows() {
+    return this.usersService.findFollows();
   }
 
   @Get('/:id')
@@ -40,5 +46,19 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request & { user: { sub: number } }) {
     return this.usersService.remove(id, req.user.sub);
+  }
+
+  // RUTAS DE FOLLOWING //
+
+  @Post('/follow')
+  @UseGuards(JwtAuthGuard)
+  follow(@Body() followData: FollowDto, @Req() req: Request & { user: { sub: number } }) {
+    return this.usersService.follow(followData, req.user.sub)
+  }
+
+  @Delete('/follow/:followedid')
+  @UseGuards(JwtAuthGuard)
+  unfollow(@Param('followedid', ParseIntPipe) followedid: number, @Req() req: Request & { user: { sub: number } }) {
+    return this.usersService.unfollow(followedid, req.user.sub)
   }
 }
