@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, IsUrl, IsOptional, IsNumber } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, IsOptional, IsNumber } from "class-validator";
 
 export class UserDto {
     @IsEmail()
@@ -22,7 +22,7 @@ export class UserDto {
     description!: string
 
     @IsOptional()
-    @IsUrl()
+    @IsString()
     imageurl!: string
 
     @IsOptional()

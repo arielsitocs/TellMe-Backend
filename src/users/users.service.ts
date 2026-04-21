@@ -10,7 +10,7 @@ export class UsersService {
 
   constructor(private prisma: PrismaService) { }
 
-  async create(userData: UserDto) {
+  async create(userData: UserDto,  imageurl: string | undefined) {
     // se hashea la contrasena del usuario con 10 rondas de encriptacion //
     const hashedPassword = await bcrypt.hash(userData.password, 10);
 
@@ -18,7 +18,8 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data: {
         ...userData,
-        password: hashedPassword
+        password: hashedPassword,
+        ...(imageurl && { imageurl }), // solo si viene imagen
       }
     });
 
@@ -75,7 +76,7 @@ export class UsersService {
     }
   }
 
-  async update(id: number, userData: UserDto, userId: number) {
+  async update(id: number, userData: UserDto, userId: number, imageurl: string | undefined) {
     try {
       const foundUser = await this.prisma.user.findFirst({
         where: {
@@ -110,8 +111,9 @@ export class UsersService {
           posts: userData.posts,
           followers: userData.followers,
           following: userData.following,
-          imageurl: userData.imageurl,
           color: userData.color,
+          // solo actualiza imageurl si viene una imagen nueva //
+          ...(imageurl && { imageurl }),
         },
       });
 
@@ -213,9 +215,9 @@ export class UsersService {
 
   // SECCION DE SEGUIMIENTOS //
 
-    async findFollows() {
-      return await this.prisma.follow.findMany();
-    }
+  async findFollows() {
+    return await this.prisma.follow.findMany();
+  }
 
   async follow(followData: FollowDto, userId: number) {
     try {

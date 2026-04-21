@@ -52,6 +52,7 @@ export class AuthService {
         description: user.description,
         color: user.color,
         posts: user.posts,
+        imageurl: user.imageurl,
         followers: user.followers,
         following: user.following,
       },

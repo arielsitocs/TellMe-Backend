@@ -1,18 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { UpdatePasswordDto } from './dto/password.dto';
 import { FollowDto } from './dto/follow.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Controller('/users')
 export class UsersController {
-  constructor(private usersService: UsersService) { }
-
+  // Establecemos el cloudinary service para la subida de imagenes //
+  constructor(private usersService: UsersService, private cloudinaryService: CloudinaryService) {}
+  
   @Post()
-  create(@Body() createUser: UserDto) {
-    return this.usersService.create(createUser);
+  @UseInterceptors(FileInterceptor('image')) // intercepta el archivo en el campo image en el form //
+  async create(@Body() createUser: UserDto, @UploadedFile() file ?: { buffer: Buffer, mimetype: string }) {
+    let imageurl: string | undefined;
+
+    // Si hay archivo en la peticion de sube la imagen //
+    if (file) {
+      imageurl = await this.cloudinaryService.uploadImage(file);
+    }
+
+    return this.usersService.create(createUser, imageurl);
   }
 
   @Get()
@@ -32,8 +43,16 @@ export class UsersController {
 
   @Patch('/:id')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UserDto, @Req() req: Request & { user: { sub: number } }) {
-    return this.usersService.update(id, updateUserDto, req.user.sub);
+  @UseInterceptors(FileInterceptor('image')) // intercepta el archivo en el campo image en el form //
+  async update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UserDto, @Req() req: Request & { user: { sub: number } }, @UploadedFile() file?: { buffer: Buffer, mimetype: string }) {
+    let imageurl: string | undefined;
+
+    // Si hay archivo en la peticion de sube la imagen //
+    if (file) {
+      imageurl = await this.cloudinaryService.uploadImage(file);
+    }
+
+    return this.usersService.update(id, updateUserDto, req.user.sub, imageurl);
   }
 
   @Patch('/password/:id')
